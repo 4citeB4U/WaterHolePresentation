@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Water Hole: Connect CRM &amp; Wellspring</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+  <!-- Include Chart.js from CDN for professional charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Reset & Basic Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      overflow: hidden;
+      color: #333;
+      position: relative;
+    }
+    /* Background Wave Effect with vibrant color movement */
+    #background-wave {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 200%;
+      height: 100%;
+      background: linear-gradient(270deg, #0056b3, #008080, #4682B4, #00a2b3);
+      background-size: 400% 400%;
+      animation: waveBackground 20s ease infinite;
+      z-index: -2;
+    }
+    @keyframes waveBackground {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    /* Laser Pointer Effect */
+    .laser-pointer {
+      position: fixed;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: red;
+      box-shadow: 0 0 10px red;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      opacity: 0.9;
+    }
+    /* Burst (confetti) effect styling */
+    .burst-particle {
+      position: fixed;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      opacity: 1;
+      transform: translate(-50%, -50%);
+      will-change: transform, opacity;
+    }
+    /* Slides Container */
+    .slides-container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+      padding-top: 100px; /* Room for narrator controls */
+    }
+    .slide {
+      position: absolute;
+      width: 100%;
+      height: calc(100% - 100px);
+      background-color: white;
+      transition: transform 0.5s ease;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      padding: 20px;
+      overflow-y: auto;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      margin: 10px;
+      border-radius: 8px;
+    }
+    .slide.active {
+      transform: translateX(0);
+      z-index: 10;
+    }
+    .slide.previous {
+      transform: translateX(-100%);
+    }
+    /* Header and Footer for Slides */
+    .slide-header, .slide-footer {
+      background: linear-gradient(135deg, #0056b3, #008080);
+      color: white;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    .slide-footer {
+      margin-top: 12px;
+    }
+    .slide-title-container {
+      display: flex;
+      align-items: center;
+    }
+    .logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #0056b3, #008080);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      margin-right: 16px;
+    }
+    .logo-inner {
+      width: 30px;
+      height: 30px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #0056b3;
+    }
+    .slide-title {
+      font-size: 28px;
+      font-weight: 600;
+      /* Gradient text effect for the Water Hole name */
+      background: linear-gradient(45deg, #0056b3, #00a2b3);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .slide-content {
+      flex: 1;
+      padding: 24px;
+      background: #fafafa;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    /* QR Codes Container (to be shown on 3 slides) */
+    .qr-codes-container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 20px;
+    }
+    .qr-code-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      max-width: 200px;
+      transition: transform 0.3s ease;
+    }
+    .qr-code-item:hover {
+      transform: scale(1.05);
+    }
+    .qr-code-img {
+      width: 150px;
+      height: 150px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .qr-code-label {
+      font-weight: 600;
+      color: #0056b3;
+    }
+    /* Navigation Controls */
+    .controls {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      gap: 12px;
+      z-index: 100;
+    }
+    .control-btn {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #0056b3;
+      color: white;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+    .control-btn:hover {
+      background-color: #004494;
+      transform: translateY(-2px);
+    }
+    /* Progress Indicator */
+    .progress {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 0%;
+      height: 6px;
+      background: linear-gradient(to right, #0056b3, #00a2b3);
+      z-index: 100;
+      transition: width 0.3s ease;
+    }
+    /* Narrator & Language Controls Panel */
+    .narrator-controls {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(0,86,179,0.9);
+      color: white;
+      padding: 8px 16px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .narrator-controls select,
+    .narrator-controls button {
+      padding: 4px 8px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .narrator-controls button {
+      background-color: white;
+      color: #0056b3;
+      cursor: pointer;
+    }
+    .narrator-controls button:hover {
+      background-color: #eee;
+    }
+    /* Chart Container */
+    #metrics-chart-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform:translate(-50%, -50%);
+      z-index:1000;
+      background:white;
+      width:80%;
+      max-width:800px;
+      height:600px;
+      padding:20px;
+      border-radius:10px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.2);
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Wave -->
+  <div id="background-wave"></div>
+  
+  <!-- Narrator & Language Controls -->
+  <div class="narrator-controls">
+    <label for="language-select">Language:</label>
+    <select id="language-select">
+      <option value="en">English</option>
+      <option value="es">Español</option>
+      <option value="fr">Français</option>
+      <!-- More languages as needed -->
+    </select>
+    <label for="voice-select">Voice:</label>
+    <select id="voice-select">
+      <option value="">Choose Voice</option>
+      <!-- Voices will load dynamically -->
+    </select>
+    <button id="play-narrator">Play</button>
+    <button id="pause-narrator">Pause</button>
+    <button id="stop-narrator">Stop</button>
+  </div>
+  
+  <!-- Slides Container -->
+  <div class="slides-container">
+    <!-- Slide 1: Title with QR Codes -->
+    <div class="slide active">
+      <div class="slide-header">
+        <div class="slide-title-container">
+          <div class="logo">
+            <div class="logo-inner">
+              <i class="fas fa-water"></i>
+            </div>
+          </div>
+          <div class="slide-title">Water Hole: Connect CRM &amp; Wellspring</div>
+        </div>
+        <div class="slide-number">1 / 5</div>
+      </div>
+      <div class="slide-content">
+        <h1>Water Hole</h1>
+        <p class="subtitle">Building Stronger Communities Through Connection</p>
+        <!-- QR Codes Container (1st instance) -->
+        <div class="qr-codes-container">
+          <div class="qr-code-item">
+            <img src="Waterholecrm_QR.png" alt="QR Code for Connect CRM" class="qr-code-img">
+            <div class="qr-code-label">Connect CRM</div>
+          </div>
+          <div class="qr-code-item">
+            <img src="Thewaterholeprojectt_QR.png" alt="QR Code for Wellspring App" class="qr-code-img">
+            <div class="qr-code-label">Wellspring App</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Water Hole 2025</div>
+        <div>Slide 1 of 5</div>
+      </div>
+    </div>
+    
+    <!-- Slide 2: The Water Hole Concept -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-container">
+          <div class="logo">
+            <div class="logo-inner">
+              <i class="fas fa-water"></i>
+            </div>
+          </div>
+          <div class="slide-title">The Water Hole Concept</div>
+        </div>
+        <div class="slide-number">2 / 5</div>
+      </div>
+      <div class="slide-content">
+        <h2>The Water Hole Concept</h2>
+        <p>
+          Throughout history, water holes have served as essential gathering places that sustain communities, foster connection, and enable growth.
+        </p>
+        <div class="concept-container">
+          <div class="concept-card">
+            <div class="concept-icon"><i class="fas fa-hand-holding-water"></i></div>
+            <div class="concept-title">Source of Life</div>
+            <p>Our platform provides vital connections and resources, much like a water hole nourishes its community.</p>
+          </div>
+          <div class="concept-card">
+            <div class="concept-icon"><i class="fas fa-users"></i></div>
+            <div class="concept-title">Community &amp; Connection</div>
+            <p>A digital meeting point that brings together organizations and individuals.</p>
+          </div>
+          <div class="concept-card">
+            <div class="concept-icon"><i class="fas fa-sync-alt"></i></div>
+            <div class="concept-title">Renewal &amp; Growth</div>
+            <p>Fostering renewed community bonds and collaboration for growth.</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Water Hole 2025</div>
+        <div>Slide 2 of 5</div>
+      </div>
+    </div>
+    
+    <!-- Slide 3: System Overview with QR Codes -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-container">
+          <div class="logo">
+            <div class="logo-inner">
+              <i class="fas fa-water"></i>
+            </div>
+          </div>
+          <div class="slide-title">System Overview</div>
+        </div>
+        <div class="slide-number">3 / 5</div>
+      </div>
+      <div class="slide-content">
+        <h2>Dual‑App Ecosystem</h2>
+        <p>
+          The Water Hole project integrates two complementary applications – Connect CRM for organizations and Wellspring for individuals and families.
+        </p>
+        <!-- Placeholder for a professional spider web chart using Chart.js -->
+        <div style="margin: 20px auto; max-width: 600px;">
+          <canvas id="spider-chart" width="600" height="400"></canvas>
+        </div>
+        <!-- QR Codes Container (2nd instance) -->
+        <div class="qr-codes-container">
+          <div class="qr-code-item">
+            <img src="Waterholecrm_QR.png" alt="QR Code for Connect CRM" class="qr-code-img">
+            <div class="qr-code-label">Connect CRM</div>
+          </div>
+          <div class="qr-code-item">
+            <img src="Thewaterholeprojectt_QR.png" alt="QR Code for Wellspring App" class="qr-code-img">
+            <div class="qr-code-label">Wellspring App</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Water Hole 2025</div>
+        <div>Slide 3 of 5</div>
+      </div>
+    </div>
+    
+    <!-- Slide 4: The Full Water Hole Story with References -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-container">
+          <div class="logo">
+            <div class="logo-inner">
+              <i class="fas fa-book-open"></i>
+            </div>
+          </div>
+          <div class="slide-title">The Water Hole Story</div>
+        </div>
+        <div class="slide-number">4 / 5</div>
+      </div>
+      <div class="slide-content">
+        <h2>The Full Story</h2>
+        <p>
+          There was a village in Africa, very far from the waterhole where they collected water. One day, while drawing water, a girl’s rope broke—and in her despair she saw a rope hanging from a cloud, reminiscent of divine stories.
+        </p>
+        <p>
+          Climbing upward, she discovered a ruined village in the sky and an old woman who asked what she desired. The girl recounted her plight, and the old woman urged her to continue and to heed an ant’s advice if it crawled into her ear.
+        </p>
+        <p>
+          As she journeyed on, an ant did indeed crawl into her ear. At a new village, the ant whispered for her to sit at the gate. When African elders in shining clothes appeared and inquired about her purpose, she claimed to be searching for a baby—believing that asking for a rope would appear weak.
+        </p>
+        <p>
+          The elders took her to a home, provided her with a basket, and instructed her to collect corn one cob at a time, following the ant’s guidance. Impressed by her work and cooking, they revealed two babies: one in red cloth and one in white. Heeding the ant’s advice, she chose the white‑clothed baby and was rewarded with it along with cloths and beads. Overjoyed, she returned to her family.
+        </p>
+        <p>
+          Jealous of her fortune, her sister ventured to the heavenly land seeking similar blessings. However, her rudeness and refusal to heed counsel led her to choose the red‑clothed baby—and a great explosion ensued, ending her life. Her fallen bones were said to mark heaven’s anger at her wicked heart.
+        </p>
+        <!-- Reference Block -->
+        <p style="font-size: 12px; color: #555; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 8px;">
+          Source: Encyclopaedia – Fauna and Flora; Tribes of Africa; African Countries; Safari Holidays © www.gateway-afric
+        </p>
+      </div>
+      <div class="slide-footer">
+        <div>Water Hole 2025</div>
+        <div>Slide 4 of 5</div>
+      </div>
+    </div>
+    
+    <!-- Slide 5: Closing / Call to Action with QR Codes -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-container">
+          <div class="logo">
+            <div class="logo-inner">
+              <i class="fas fa-thumbs-up"></i>
+            </div>
+          </div>
+          <div class="slide-title">Get Connected</div>
+        </div>
+        <div class="slide-number">5 / 5</div>
+      </div>
+      <div class="slide-content">
+        <h2>Join the Movement</h2>
+        <p>
+          Explore Connect CRM for organizations and the Wellspring App for individuals. Let the Water Hole be the source of new beginnings in your community.
+        </p>
+        <!-- QR Codes Container (3rd instance) -->
+        <div class="qr-codes-container">
+          <div class="qr-code-item">
+            <img src="Waterholecrm_QR.png" alt="QR Code for Connect CRM" class="qr-code-img">
+            <div class="qr-code-label">Connect CRM</div>
+          </div>
+          <div class="qr-code-item">
+            <img src="Thewaterholeprojectt_QR.png" alt="QR Code for Wellspring App" class="qr-code-img">
+            <div class="qr-code-label">Wellspring App</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Water Hole 2025</div>
+        <div>Slide 5 of 5</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Navigation Controls -->
+  <div class="controls">
+    <div class="control-btn" id="prev-btn"><i class="fas fa-chevron-left"></i></div>
+    <div class="control-btn" id="next-btn"><i class="fas fa-chevron-right"></i></div>
+  </div>
+  <div class="progress"></div>
+  
+  <!-- Chart Container (for future detailed metrics if needed) -->
+  <div id="metrics-chart-container">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3>Impact Metrics Visualization</h3>
+      <button id="close-chart" style="background:none; border:none; font-size:24px; cursor:pointer;">&times;</button>
+    </div>
+    <canvas id="detailed-spider-chart" width="700" height="500"></canvas>
+  </div>
+  
+  <script>
+    /* Slide Navigation */
+    const slides = document.querySelectorAll('.slide');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const progress = document.querySelector('.progress');
+    let currentSlide = 0;
+    
+    function updateProgress() {
+      const progressPercentage = ((currentSlide + 1) / slides.length) * 100;
+      progress.style.width = `${progressPercentage}%`;
+    }
+    
+    function updateSlideNumbers() {
+      document.querySelectorAll('.slide-number').forEach((elem, index) => {
+        elem.textContent = `${index + 1} / ${slides.length}`;
+      });
+    }
+    
+    function showSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= slides.length) index = slides.length - 1;
+      slides[currentSlide].classList.remove('active');
+      slides[index].classList.add('active');
+      currentSlide = index;
+      updateProgress();
+      updateSlideNumbers();
+    }
+    
+    prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+    nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+    
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') showSlide(currentSlide + 1);
+      else if (e.key === 'ArrowLeft') showSlide(currentSlide - 1);
+    });
+    
+    updateProgress();
+    updateSlideNumbers();
+    
+    /* Laser Pointer Effect on Click */
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.narrator-controls') || e.target.closest('.control-btn')) return;
+      const laser = document.createElement('div');
+      laser.className = 'laser-pointer';
+      laser.style.left = e.clientX + 'px';
+      laser.style.top = e.clientY + 'px';
+      document.body.appendChild(laser);
+      setTimeout(() => { laser.remove(); }, 500);
+      
+      // Trigger burst effect as a "prize" on every click
+      createBurst(e.clientX, e.clientY);
+    });
+    
+    /* Burst Effect Function */
+    function createBurst(x, y) {
+      const colors = ['#0056b3', '#008080', '#4682B4', '#00a2b3', '#ff9800'];
+      const particleCount = 20;
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'burst-particle';
+        particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.left = x + 'px';
+        particle.style.top = y + 'px';
+        document.body.appendChild(particle);
+        // Random trajectory
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 50 + Math.random() * 50;
+        particle.style.transform = `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px)`;
+        particle.style.opacity = 0;
+        // Remove particle after animation completes
+        setTimeout(() => { particle.remove(); }, 800);
+      }
+    }
+    
+    /* Narration & Translation System */
+    function initializeNarrationSystem() {
+      const voiceSelect = document.getElementById('voice-select');
+      const playBtn = document.getElementById('play-narrator');
+      const pauseBtn = document.getElementById('pause-narrator');
+      const stopBtn = document.getElementById('stop-narrator');
+      const languageSelect = document.getElementById('language-select');
+      
+      if (!voiceSelect || !playBtn || !pauseBtn || !stopBtn) return;
+      
+      let synth = window.speechSynthesis;
+      let voices = [];
+      let currentUtterance = null;
+      
+      function loadVoices() {
+        voices = synth.getVoices();
+        voiceSelect.innerHTML = '<option value="">Choose Voice</option>';
+        voices.forEach((voice, index) => {
+          const option = document.createElement('option');
+          option.value = index;
+          option.textContent = `${voice.name} (${voice.lang})`;
+          voiceSelect.appendChild(option);
+        });
+      }
+      
+      if (synth.onvoiceschanged !== undefined) {
+        synth.onvoiceschanged = loadVoices;
+      } else {
+        loadVoices();
+      }
+      
+      // Example translations; expand as needed
+      const translations = {
+        en: {
+          title: 'Water Hole: Connect CRM & Wellspring',
+          subtitle: 'Building Stronger Communities Through Connection'
+        },
+        es: {
+          title: 'Ojo de Agua: Connect CRM y Wellspring',
+          subtitle: 'Construyendo Comunidades Más Fuertes'
+        },
+        fr: {
+          title: 'Point d\'Eau: Connect CRM et Wellspring',
+          subtitle: 'Bâtir des Communautés Plus Fortes'
+        }
+      };
+      
+      function translatePresentation(language) {
+        if (!translations[language]) return;
+        const trans = translations[language];
+        document.querySelectorAll('.slide-title').forEach(el => {
+          if (el.textContent.includes('Water Hole') || el.textContent.includes('Ojo de Agua') || el.textContent.includes('Point d\'Eau')) {
+            el.textContent = trans.title;
+          }
+        });
+        const mainTitle = document.querySelector('h1');
+        if (mainTitle) {
+          mainTitle.textContent = trans.title.split(':')[0];
+        }
+        const subtitle = document.querySelector('.subtitle');
+        if (subtitle) {
+          subtitle.textContent = trans.subtitle;
+        }
+      }
+      
+      languageSelect.addEventListener('change', () => {
+        translatePresentation(languageSelect.value);
+      });
+      
+      function playNarration() {
+        if (synth.speaking) {
+          synth.resume();
+          return;
+        }
+        const voiceIndex = voiceSelect.value;
+        if (voiceIndex === "") return;
+        const activeSlide = document.querySelector('.slide.active');
+        if (!activeSlide) return;
+        let textToRead = '';
+        const slideTitle = activeSlide.querySelector('.slide-title');
+        if (slideTitle) textToRead += slideTitle.textContent + '. ';
+        activeSlide.querySelectorAll('h1, h2, h3, h4, p').forEach(el => {
+          textToRead += el.textContent + '. ';
+        });
+        currentUtterance = new SpeechSynthesisUtterance(textToRead);
+        currentUtterance.voice = voices[voiceIndex];
+        currentUtterance.rate = 1;
+        currentUtterance.pitch = 1;
+        synth.speak(currentUtterance);
+      }
+      
+      function pauseNarration() {
+        if (synth.speaking) synth.pause();
+      }
+      
+      function stopNarration() {
+        synth.cancel();
+      }
+      
+      playBtn.addEventListener('click', playNarration);
+      pauseBtn.addEventListener('click', pauseNarration);
+      stopBtn.addEventListener('click', stopNarration);
+    }
+    
+    initializeNarrationSystem();
+    
+    /* Professional Spider Web Chart using Chart.js (for Slide 3) */
+    function createSpiderChart() {
+      const ctx = document.getElementById('spider-chart').getContext('2d');
+      new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['Connectivity', 'Resource Access', 'Community Impact', 'Growth', 'Collaboration'],
+          datasets: [{
+            label: 'Impact Metrics',
+            data: [80, 90, 70, 85, 75],
+            backgroundColor: 'rgba(0,128,128,0.2)',
+            borderColor: '#008080',
+            borderWidth: 2,
+            pointBackgroundColor: '#0056b3'
+          }]
+        },
+        options: {
+          scales: {
+            r: { suggestedMin: 0, suggestedMax: 100 }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+    createSpiderChart();
+    
+    /* (Optional) Detailed Chart - Show/Hide functionality */
+    const closeChartBtn = document.getElementById('close-chart');
+    const metricsChartContainer = document.getElementById('metrics-chart-container');
+    closeChartBtn.addEventListener('click', () => {
+      metricsChartContainer.style.display = 'none';
+    });
+  </script>
+</body>
+</html>
